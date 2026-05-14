@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Big Best Gyros — AI Ordering Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wa-bg:#0b141a;
+    --wa-panel:#111b21;
+    --wa-header:#202c33;
+    --wa-mine:#005c4b;
+    --wa-theirs:#202c33;
+    --wa-tile:#0b141a;
+    --wa-text:#e9edef;
+    --wa-muted:#8696a0;
+    --wa-input:#2a3942;
+    --wa-accent:#00a884;
+    --bg:#0f1115;
+    --panel:#161a22;
+    --panel-2:#1d222d;
+    --line:#262c38;
+    --text:#e8ecf3;
+    --muted:#8b95a7;
+    --accent:#22c55e;
+    --accent-2:#3b82f6;
+    --warn:#f59e0b;
+    --danger:#ef4444;
+    --pink:#ec4899;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 700px at 10% -10%,#1b2030 0%,transparent 60%),radial-gradient(1000px 700px at 110% 110%,#0f2a25 0%,transparent 60%),var(--bg);
+    color:var(--text);
+    overflow:hidden;
+  }
+  .app{
+    display:grid;
+    grid-template-columns: 1fr 380px 1fr;
+    grid-template-rows: 64px 1fr;
+    height:100vh;
+    gap:0;
+  }
+  header.bar{
+    grid-column:1 / -1;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 22px;
+    background:linear-gradient(180deg,#11151c 0%,#0c1017 100%);
+    border-bottom:1px solid var(--line);
+    z-index:5;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:36px;height:36px;border-radius:10px;
+    background:conic-gradient(from 210deg,#f59e0b,#ef4444,#22c55e,#3b82f6,#f59e0b);
+    box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 0 0 2px #0f1115;
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+  }
+  .brand h1{font-size:15px;margin:0;letter-spacing:.2px}
+  .brand small{color:var(--muted);font-size:11px}
+  .bar-actions{display:flex;align-items:center;gap:10px}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 12px;border-radius:999px;
+    background:#0e1924;border:1px solid var(--line);
+    color:var(--muted);font-size:12px
+  }
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+  button.cta{
+    background:linear-gradient(180deg,#22c55e,#16a34a);
+    color:#06140b;border:0;border-radius:10px;
+    padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;
+    box-shadow:0 6px 20px rgba(34,197,94,.25);
+  }
+  button.cta:active{transform:translateY(1px)}
+  button.ghost{
+    background:transparent;color:var(--text);
+    border:1px solid var(--line);border-radius:10px;
+    padding:9px 12px;font-weight:600;font-size:12px;cursor:pointer;
+  }
+
+  /* LEFT — workflow + analytics */
+  .left{
+    border-right:1px solid var(--line);
+    padding:18px;overflow:auto;
+    background:linear-gradient(180deg,#101319,#0c0f15);
+  }
+  .section-title{
+    text-transform:uppercase;font-size:11px;letter-spacing:1.4px;
+    color:var(--muted);margin:0 0 10px 0;
+  }
+  .workflow{
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .step{
+    display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;
+    padding:12px;border:1px solid var(--line);border-radius:14px;
+    background:linear-gradient(180deg,#141923,#10141c);
+    transition:all .35s ease;
+    position:relative;
+  }
+  .step .ic{
+    width:36px;height:36px;border-radius:10px;
+    background:#0e1620;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:16px;
+    transition:all .35s ease;
+  }
+  .step .meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .step .meta b{font-size:13px}
+  .step .meta span{font-size:11px;color:var(--muted)}
+  .step .state{
+    font-size:10px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--muted);background:#0e1620;border:1px solid var(--line);
+    padding:4px 8px;border-radius:999px;
+  }
+  .step.active{
+    border-color:#1f6f5a;background:linear-gradient(180deg,#11231e,#0e1a17);
+    box-shadow:0 0 0 1px rgba(34,197,94,.18),0 10px 30px rgba(34,197,94,.08);
+  }
+  .step.active .ic{background:#0d2a22;border-color:#1f6f5a;color:#7ee8c5}
+  .step.active .state{color:#7ee8c5;border-color:#1f6f5a;background:#0d2a22}
+  .step.done .ic{background:#0e1620;color:#8b95a7}
+  .step.done .state{color:#22c55e;border-color:#1c3a26;background:#0d1a13}
+
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .card{
+    padding:12px;border-radius:14px;
+    background:linear-gradient(180deg,#141923,#10141c);
+    border:1px solid var(--line);
+  }
+  .card .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px}
+  .card .v{font-size:22px;font-weight:800;margin-top:4px}
+  .card .d{font-size:11px;color:var(--accent);margin-top:2px}
+  .integrations{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11px;color:var(--muted);
+    background:#0f1620;border:1px solid var(--line);
+    padding:6px 9px;border-radius:999px
+  }
+  .chip i{width:6px;height:6px;border-radius:50%;background:#3b82f6;box-shadow:0 0 6px #3b82f6}
+  .chip.wa i{background:#25d366;box-shadow:0 0 6px #25d366}
+  .chip.gpt i{background:#7c3aed;box-shadow:0 0 6px #7c3aed}
+  .chip.ocr i{background:#f59e0b;box-shadow:0 0 6px #f59e0b}
+  .chip.pos i{background:#ef4444;box-shadow:0 0 6px #ef4444}
+  .chip.n8n i{background:#ea4b71;box-shadow:0 0 6px #ea4b71}
+
+  /* MIDDLE — phone */
+  .phone-wrap{
+    display:flex;align-items:center;justify-content:center;
+    padding:14px 8px;
+  }
+  .phone{
+    width:360px;height:calc(100vh - 110px);max-height:760px;
+    background:#0b141a;border-radius:38px;
+    border:10px solid #0a0d12;
+    box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 0 0 1px #1d242c;
+    display:flex;flex-direction:column;overflow:hidden;position:relative;
+  }
+  .notch{
+    position:absolute;left:50%;top:6px;transform:translateX(-50%);
+    width:110px;height:22px;border-radius:14px;background:#0a0d12;z-index:2;
+  }
+  .wa-header{
+    background:var(--wa-header);padding:14px 14px 10px 14px;
+    display:flex;align-items:center;gap:10px;
+    border-bottom:1px solid #0a141a;
+    padding-top:34px;
+  }
+  .avatar{
+    width:36px;height:36px;border-radius:50%;
+    background:conic-gradient(from 200deg,#f59e0b,#ef4444,#22c55e,#3b82f6,#f59e0b);
+    display:flex;align-items:center;justify-content:center;font-size:14px;
+    box-shadow:inset 0 0 0 2px #111;
+  }
+  .wa-title{display:flex;flex-direction:column;flex:1;min-width:0}
+  .wa-title b{font-size:14px;color:var(--wa-text)}
+  .wa-title small{font-size:11px;color:var(--wa-muted)}
+  .wa-actions{display:flex;gap:14px;color:var(--wa-muted);font-size:14px}
+  .wa-body{
+    flex:1;overflow-y:auto;padding:12px;
+    background:
+      radial-gradient(60% 40% at 50% 0%,rgba(0,168,132,.05),transparent 70%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><g fill='%23ffffff' fill-opacity='0.02'><circle cx='10' cy='10' r='1'/><circle cx='40' cy='40' r='1'/><circle cx='70' cy='20' r='1'/></g></svg>"),
+      var(--wa-bg);
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .wa-body::-webkit-scrollbar{width:6px}
+  .wa-body::-webkit-scrollbar-thumb{background:#1b2730;border-radius:3px}
+  .msg{
+    max-width:84%;padding:7px 10px 18px 10px;border-radius:10px;
+    font-size:13px;line-height:1.35;position:relative;
+    color:var(--wa-text);
+    box-shadow:0 1px 0 rgba(0,0,0,.2);
+    word-wrap:break-word;
+    animation:popin .25s ease;
+  }
+  @keyframes popin{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+  .msg.them{background:var(--wa-theirs);align-self:flex-start;border-top-left-radius:2px}
+  .msg.me{background:var(--wa-mine);align-self:flex-end;border-top-right-radius:2px}
+  .msg .time{
+    position:absolute;right:8px;bottom:3px;
+    font-size:9.5px;color:rgba(233,237,239,.6);
+  }
+  .msg.me .time::after{content:" ✓✓";color:#53bdeb}
+  .msg img.receipt{
+    width:200px;border-radius:8px;display:block;margin:2px 0 4px 0;
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .menu-card{
+    background:#0e1c22;border:1px solid #1c2a31;border-radius:10px;
+    padding:8px;margin-top:4px;
+  }
+  .menu-card .item{
+    display:flex;justify-content:space-between;font-size:12px;
+    padding:5px 0;border-bottom:1px dashed #1c2a31;
+  }
+  .menu-card .item:last-child{border-bottom:0}
+  .menu-card .item b{color:#9beac4}
+  .typing{
+    align-self:flex-start;background:var(--wa-theirs);
+    padding:8px 12px;border-radius:10px;border-top-left-radius:2px;
+    display:inline-flex;gap:3px;align-items:center;
+  }
+  .typing span{
+    width:5px;height:5px;border-radius:50%;background:#8696a0;
+    animation:blink 1.2s infinite ease-in-out;
+  }
+  .typing span:nth-child(2){animation-delay:.2s}
+  .typing span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+  .wa-input{
+    background:var(--wa-header);padding:8px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .wa-input .field{
+    flex:1;background:var(--wa-input);border-radius:22px;
+    padding:9px 14px;color:var(--wa-text);font-size:13px;
+    display:flex;align-items:center;color:var(--wa-muted);
+  }
+  .wa-input .send{
+    width:38px;height:38px;border-radius:50%;background:var(--wa-accent);
+    display:flex;align-items:center;justify-content:center;color:#06140b;
+    font-weight:800;cursor:pointer;
+  }
+
+  /* RIGHT — kitchen + AI log */
+  .right{
+    border-left:1px solid var(--line);
+    padding:18px;overflow:auto;
+    background:linear-gradient(180deg,#101319,#0c0f15);
+  }
+  .kitchen{
+    padding:14px;border-radius:14px;
+    background:linear-gradient(180deg,#141923,#10141c);
+    border:1px solid var(--line);
+  }
+  .kitchen-head{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+  }
+  .kitchen-head h3{margin:0;font-size:14px}
+  .ticket{
+    background:#0d1219;border:1px dashed #2a3340;border-radius:12px;
+    padding:12px;margin-top:10px;font-family:ui-monospace,Menlo,monospace;font-size:12px;
+    min-height:170px;color:#cdd6e0;position:relative;
+  }
+  .ticket .row{display:flex;justify-content:space-between;padding:2px 0}
+  .ticket .row span:last-child{color:#9beac4}
+  .ticket hr{border:0;border-top:1px dashed #2a3340;margin:6px 0}
+  .ticket .stamp{
+    position:absolute;top:12px;right:12px;
+    font-size:10px;letter-spacing:1.4px;color:#f59e0b;
+    border:1px dashed #5b4413;padding:3px 6px;border-radius:6px;text-transform:uppercase;
+  }
+  .ticket.printed .stamp{color:#22c55e;border-color:#1c3a26}
+  .stages{
+    display:flex;gap:6px;margin-top:10px;
+  }
+  .stage{
+    flex:1;padding:8px;border-radius:8px;
+    background:#0e1620;border:1px solid var(--line);
+    font-size:11px;text-align:center;color:var(--muted);
+  }
+  .stage.on{background:#0d2a22;border-color:#1f6f5a;color:#9beac4}
+
+  .ailog{
+    margin-top:14px;padding:14px;border-radius:14px;
+    background:linear-gradient(180deg,#141923,#10141c);
+    border:1px solid var(--line);
+    font-family:ui-monospace,Menlo,monospace;font-size:11.5px;
+    max-height:240px;overflow:auto;
+  }
+  .ailog .l{padding:3px 0;color:#9aa6b8}
+  .ailog .l b{color:#7c3aed}
+  .ailog .l em{color:#22c55e;font-style:normal}
+  .ailog .l u{color:#f59e0b;text-decoration:none}
+
+  .ocr{
+    margin-top:14px;padding:14px;border-radius:14px;
+    background:linear-gradient(180deg,#141923,#10141c);
+    border:1px solid var(--line);
+  }
+  .ocr-row{display:flex;gap:12px;align-items:flex-start}
+  .ocr-thumb{
+    width:90px;height:120px;border-radius:8px;flex-shrink:0;
+    background:linear-gradient(180deg,#f8f5ee,#e9e3d4);
+    color:#222;font-family:ui-monospace,Menlo,monospace;font-size:8px;
+    padding:6px;line-height:1.25;overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);
+    position:relative;
+  }
+  .ocr-thumb::after{
+    content:"";position:absolute;left:0;right:0;top:0;height:2px;
+    background:linear-gradient(90deg,transparent,#22c55e,transparent);
+    animation:scan 1.6s linear infinite;
+  }
+  @keyframes scan{
+    0%{transform:translateY(0)}
+    100%{transform:translateY(118px)}
+  }
+  .ocr-fields{flex:1;display:flex;flex-direction:column;gap:6px}
+  .ocr-fields .f{
+    display:flex;justify-content:space-between;font-size:12px;
+    padding:6px 8px;background:#0e1620;border:1px solid var(--line);border-radius:8px;
+  }
+  .ocr-fields .f span:first-child{color:var(--muted)}
+  .ocr-fields .f.ok span:last-child{color:#7ee8c5}
+  .ocr-fields .f.pending span:last-child{color:#f59e0b}
+
+  .footer{
+    grid-column:1 / -1;
+    border-top:1px solid var(--line);
+    padding:6px 14px;font-size:11px;color:var(--muted);
+    display:flex;gap:14px;align-items:center;justify-content:space-between;
+    background:#0c0f15;
+  }
+  .legend{display:flex;gap:10px;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:8px;height:8px;border-radius:50%}
+
+  /* Responsive */
+  @media (max-width:1100px){
+    .app{grid-template-columns:1fr 360px}
+    .right{display:none}
+  }
+  @media (max-width:760px){
+    body{overflow:auto}
+    .app{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+    .left{display:none}
+    .right{display:none}
+    header.bar{padding:8px 12px;height:auto;flex-wrap:wrap;gap:8px}
+    .brand h1{font-size:13px}
+    .brand small{font-size:10px}
+    button.cta{padding:8px 12px;font-size:12px}
+    .phone-wrap{padding:8px 0}
+    .phone{
+      width:100vw;max-width:100vw;height:calc(100vh - 120px);max-height:none;
+      border-radius:0;border-width:0;border-top:1px solid #1d242c;
+      box-shadow:none;
+    }
+    .notch{display:none}
+    .wa-header{padding-top:14px}
+    .footer{font-size:10px;flex-wrap:wrap;gap:6px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="brand">
+      <div class="logo">🥙</div>
+      <div>
+        <h1>Big Best Gyros — AI Ordering Concierge</h1>
+        <small>WhatsApp · GPT-4o · OCR Payments · POS · Kitchen Display</small>
+      </div>
+    </div>
+    <div class="bar-actions">
+      <span class="pill"><span class="dot"></span> Live demo</span>
+      <button class="ghost" id="resetBtn">Reset</button>
+      <button class="cta" id="startBtn">Start demo ▶</button>
+    </div>
+  </header>
+
+  <!-- LEFT -->
+  <aside class="left">
+    <h2 class="section-title">Workflow</h2>
+    <div class="workflow" id="workflow">
+      <div class="step" data-step="1">
+        <div class="ic">💬</div>
+        <div class="meta"><b>WhatsApp trigger</b><span>Customer opens chat</span></div>
+        <div class="state">Idle</div>
+      </div>
+      <div class="step" data-step="2">
+        <div class="ic">🤖</div>
+        <div class="meta"><b>AI greeting & menu</b><span>GPT-4o intent + menu RAG</span></div>
+        <div class="state">Idle</div>
+      </div>
+      <div class="step" data-step="3">
+        <div class="ic">🥗</div>
+        <div class="meta"><b>Recommendation</b><span>Allergens, upsell, memory</span></div>
+        <div class="state">Idle</div>
+      </div>
+      <div class="step" data-step="4">
+        <div class="ic">📍</div>
+        <div class="meta"><b>Customer & delivery</b><span>Address, fee calc</span></div>
+        <div class="state">Idle</div>
+      </div>
+      <div class="step" data-step="5">
+        <div class="ic">🧾</div>
+        <div class="meta"><b>Payment OCR</b><span>Receipt verification</span></div>
+        <div class="state">Idle</div>
+      </div>
+      <div class="step" data-step="6">
+        <div class="ic">🍳</div>
+        <div class="meta"><b>POS / Kitchen</b><span>Ticket printed</span></div>
+        <div class="state">Idle</div>
+      </div>
+      <div class="step" data-step="7">
+        <div class="ic">🛵</div>
+        <div class="meta"><b>Status updates</b><span>Cooking → On the way</span></div>
+        <div class="state">Idle</div>
+      </div>
+    </div>
+
+    <h2 class="section-title" style="margin-top:18px">Today</h2>
+    <div class="cards">
+      <div class="card"><div class="k">Auto-handled</div><div class="v" id="kpiOrders">128</div><div class="d">+24% vs. avg</div></div>
+      <div class="card"><div class="k">Avg. handle</div><div class="v" id="kpiHandle">42<small style="font-size:12px;color:var(--muted)">s</small></div><div class="d">no human in loop</div></div>
+      <div class="card"><div class="k">Upsell rate</div><div class="v" id="kpiUpsell">31%</div><div class="d">drinks + desserts</div></div>
+      <div class="card"><div class="k">Calls avoided</div><div class="v" id="kpiCalls">96</div><div class="d">staff freed up</div></div>
+    </div>
+
+    <h2 class="section-title" style="margin-top:18px">Connectors</h2>
+    <div class="integrations">
+      <span class="chip wa"><i></i>WhatsApp Cloud API</span>
+      <span class="chip gpt"><i></i>GPT-4o</span>
+      <span class="chip n8n"><i></i>n8n orchestration</span>
+      <span class="chip ocr"><i></i>OCR Payments</span>
+      <span class="chip pos"><i></i>POS / KDS</span>
+      <span class="chip"><i></i>Stripe</span>
+      <span class="chip"><i></i>Google Maps</span>
+      <span class="chip"><i></i>Supabase</span>
+    </div>
+  </aside>
+
+  <!-- MIDDLE -->
+  <section class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="wa-header">
+        <div class="avatar">🥙</div>
+        <div class="wa-title">
+          <b>Big Best Gyros</b>
+          <small id="waStatus">online</small>
+        </div>
+        <div class="wa-actions">📞 📹 ⋮</div>
+      </div>
+      <div class="wa-body" id="chat"></div>
+      <div class="wa-input">
+        <span style="color:var(--wa-muted);font-size:18px">😊</span>
+        <div class="field">Message</div>
+        <span style="color:var(--wa-muted);font-size:18px">📎</span>
+        <span style="color:var(--wa-muted);font-size:18px">📷</span>
+        <div class="send">➤</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT -->
+  <aside class="right">
+    <h2 class="section-title">Payment verification (OCR)</h2>
+    <div class="ocr">
+      <div class="ocr-row">
+        <div class="ocr-thumb" id="ocrThumb">
+          BANK TRANSFER<br/>
+          ─────────────<br/>
+          To: Big Best Gyros<br/>
+          Ref: BBG-7421<br/>
+          Amt: £16.80<br/>
+          Date: 14 May 26<br/>
+          Time: 19:42<br/>
+          Status: APPROVED<br/>
+          Auth: 9X44-21A<br/>
+          ─────────────<br/>
+          Sort 04-29-09<br/>
+          Acct ****8821
+        </div>
+        <div class="ocr-fields">
+          <div class="f pending" id="ocrAmt"><span>Amount detected</span><span>—</span></div>
+          <div class="f pending" id="ocrRef"><span>Reference</span><span>—</span></div>
+          <div class="f pending" id="ocrDate"><span>Timestamp</span><span>—</span></div>
+          <div class="f pending" id="ocrStatus"><span>Match vs. order</span><span>—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-title" style="margin-top:18px">Kitchen Display</h2>
+    <div class="kitchen">
+      <div class="kitchen-head">
+        <h3>Ticket #BBG-7421</h3>
+        <span class="pill"><span class="dot" id="kdsDot" style="background:#f59e0b;box-shadow:0 0 8px #f59e0b"></span><span id="kdsState">Awaiting payment</span></span>
+      </div>
+      <div class="ticket" id="ticket">
+        <div class="stamp" id="ticketStamp">Pending</div>
+        <div class="row"><span>Channel</span><span>WhatsApp</span></div>
+        <div class="row"><span>Customer</span><span id="tCustomer">—</span></div>
+        <div class="row"><span>Delivery</span><span id="tAddress">—</span></div>
+        <hr/>
+        <div id="tItems"><div class="row" style="color:#6b7382">(items will appear here)</div></div>
+        <hr/>
+        <div class="row"><span>Subtotal</span><span id="tSub">£0.00</span></div>
+        <div class="row"><span>Delivery</span><span id="tFee">£0.00</span></div>
+        <div class="row"><span><b>Total</b></span><span><b id="tTotal">£0.00</b></span></div>
+      </div>
+      <div class="stages">
+        <div class="stage" id="st-rec">Received</div>
+        <div class="stage" id="st-cook">Cooking</div>
+        <div class="stage" id="st-pack">Packed</div>
+        <div class="stage" id="st-out">Out for delivery</div>
+        <div class="stage" id="st-done">Delivered</div>
+      </div>
+    </div>
+
+    <h2 class="section-title" style="margin-top:18px">AI agent trace</h2>
+    <div class="ailog" id="ailog"></div>
+  </aside>
+
+  <footer class="footer">
+    <div class="legend">
+      <span><i style="background:#25d366"></i>WhatsApp</span>
+      <span><i style="background:#7c3aed"></i>LLM</span>
+      <span><i style="background:#f59e0b"></i>OCR</span>
+      <span><i style="background:#ef4444"></i>POS/KDS</span>
+      <span><i style="background:#3b82f6"></i>Logistics</span>
+    </div>
+    <div>© Big Best Gyros · prototype for demo purposes</div>
+  </footer>
+</div>
+
+<script>
+/* ===== Demo script (scripted conversation) ===== */
+const chatEl = document.getElementById('chat');
+const aiLog = document.getElementById('ailog');
+const waStatus = document.getElementById('waStatus');
+const ticketStamp = document.getElementById('ticketStamp');
+const ticketEl = document.getElementById('ticket');
+const kdsDot = document.getElementById('kdsDot');
+const kdsState = document.getElementById('kdsState');
+
+const items = []; // running cart
+
+let running = false;
+let timers = [];
+const sleep = (ms) => new Promise(res => { const t=setTimeout(res,ms); timers.push(t); });
+
+function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+
+function now(){
+  const d = new Date();
+  return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+
+function addMsg(side, html, opts={}){
+  const div = document.createElement('div');
+  div.className = 'msg '+side;
+  div.innerHTML = html + `<span class="time">${now()}</span>`;
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
+  return div;
+}
+
+async function typing(side='them', ms=900){
+  waStatus.textContent = side==='them' ? 'typing…' : 'online';
+  const t = document.createElement('div');
+  t.className = 'typing';
+  t.innerHTML = '<span></span><span></span><span></span>';
+  chatEl.appendChild(t);
+  chatEl.scrollTop = chatEl.scrollHeight;
+  await sleep(ms);
+  t.remove();
+  waStatus.textContent = 'online';
+}
+
+function log(html){
+  const l = document.createElement('div');
+  l.className = 'l';
+  l.innerHTML = `[${now()}] ${html}`;
+  aiLog.appendChild(l);
+  aiLog.scrollTop = aiLog.scrollHeight;
+}
+
+function setStep(n, state='active'){
+  document.querySelectorAll('.step').forEach(s => {
+    const k = parseInt(s.dataset.step,10);
+    s.classList.remove('active');
+    if (k < n) { s.classList.add('done'); s.querySelector('.state').textContent = 'Done'; }
+    if (k === n) {
+      s.classList.add(state);
+      s.querySelector('.state').textContent = state === 'active' ? 'Running' : 'Done';
+    }
+    if (k > n) { s.classList.remove('done'); s.querySelector('.state').textContent = 'Idle'; }
+  });
+}
+
+function addItem(name, qty, price){
+  items.push({name, qty, price});
+  renderTicket();
+}
+
+function renderTicket(){
+  const tItems = document.getElementById('tItems');
+  if (!items.length) {
+    tItems.innerHTML = '<div class="row" style="color:#6b7382">(items will appear here)</div>';
+  } else {
+    tItems.innerHTML = items.map(i =>
+      `<div class="row"><span>${i.qty}× ${i.name}</span><span>£${(i.qty*i.price).toFixed(2)}</span></div>`
+    ).join('');
+  }
+  const sub = items.reduce((s,i)=>s+i.qty*i.price,0);
+  document.getElementById('tSub').textContent = '£'+sub.toFixed(2);
+}
+
+function setStage(id){
+  ['st-rec','st-cook','st-pack','st-out','st-done'].forEach(s => {
+    document.getElementById(s).classList.remove('on');
+  });
+  if (!id) return;
+  const el = document.getElementById(id);
+  if (el) el.classList.add('on');
+}
+
+function setKDS(text, color){
+  kdsState.textContent = text;
+  kdsDot.style.background = color;
+  kdsDot.style.boxShadow = '0 0 8px '+color;
+}
+
+function reset(){
+  clearTimers();
+  running = false;
+  chatEl.innerHTML = '';
+  aiLog.innerHTML = '';
+  items.length = 0;
+  renderTicket();
+  document.getElementById('tCustomer').textContent = '—';
+  document.getElementById('tAddress').textContent = '—';
+  document.getElementById('tFee').textContent = '£0.00';
+  document.getElementById('tTotal').textContent = '£0.00';
+  ticketStamp.textContent = 'Pending';
+  ticketStamp.style.color = '#f59e0b';
+  ticketStamp.style.borderColor = '#5b4413';
+  ticketEl.classList.remove('printed');
+  setKDS('Awaiting payment','#f59e0b');
+  setStage('');
+  ['ocrAmt','ocrRef','ocrDate','ocrStatus'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.classList.remove('ok'); el.classList.add('pending');
+    el.querySelector('span:last-child').textContent = '—';
+  });
+  setStep(0);
+}
+
+async function runDemo(){
+  if (running) return;
+  reset();
+  running = true;
+
+  /* STEP 1 — Trigger */
+  setStep(1);
+  log('<b>n8n</b> webhook fired — WhatsApp Cloud API inbound from <u>+44 7700 900812</u>');
+  await sleep(500);
+  addMsg('me','Hey, do you deliver tonight?');
+  await sleep(700);
+  log('<b>agent</b> intent: <em>greeting + delivery_inquiry</em> · session=ws_7421');
+
+  /* STEP 2 — Greeting & menu */
+  setStep(2);
+  await typing('them',1200);
+  addMsg('them','Yiá sas 👋 Welcome to <b>Big Best Gyros</b>! Yes, we deliver until 23:30 across NW/N London. Here\'s a peek at the menu:');
+  addMsg('them',
+    `<div class="menu-card">
+       <div class="item"><span>🥙 Chicken Gyro (pita)</span><b>£7.50</b></div>
+       <div class="item"><span>🌶️ Pork Gyro (pita)</span><b>£7.50</b></div>
+       <div class="item"><span>🧀 Halloumi Pita (veggie)</span><b>£7.50</b></div>
+       <div class="item"><span>🥗 Greek Salad</span><b>£7.50</b></div>
+       <div class="item"><span>🍟 Chips with Feta Cheese</span><b>£4.50</b></div>
+     </div>`
+  );
+  addMsg('them','Pita wraps come with tomato, onion, tzatziki & our hand-cut chips inside 🥙 Want the full menu (gyros, souvlaki, box meals, specials)? Just ask. Allergens covered too 🌾🥛🥜');
+  log('<b>agent</b> retrieved menu from <u>menu.products</u> (Supabase) · <em>33 items</em> · top-5 highlighted');
+
+  await sleep(900);
+  addMsg('me','What\'s the chicken gyro like? Never tried one here before');
+  await typing('them',1100);
+  log('<b>agent</b> intent: <em>product_inquiry(chicken_gyro)</em> · attaching product photo');
+  addMsg('them','Here\'s our Chicken Gyro 😋');
+  addMsg('them',
+    `<div style="margin:2px 0 4px 0;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08);width:220px;">
+      <svg viewBox="0 0 240 200" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;">
+        <defs>
+          <linearGradient id="tbl" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#bba990"/>
+            <stop offset="100%" stop-color="#8c7a60"/>
+          </linearGradient>
+          <radialGradient id="plt" cx="0.5" cy="0.4">
+            <stop offset="0%" stop-color="#3c3c42"/>
+            <stop offset="100%" stop-color="#181820"/>
+          </radialGradient>
+          <linearGradient id="pita" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f3d69a"/>
+            <stop offset="100%" stop-color="#c89c50"/>
+          </linearGradient>
+          <linearGradient id="chip" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#d9a223"/>
+            <stop offset="50%" stop-color="#f6cf52"/>
+            <stop offset="100%" stop-color="#c89018"/>
+          </linearGradient>
+        </defs>
+        <rect width="240" height="200" fill="url(#tbl)"/>
+        <g opacity=".18" stroke="#000" stroke-width=".5">
+          <path d="M0 20 H240 M0 40 H240 M0 60 H240 M0 80 H240 M0 100 H240 M0 120 H240 M0 140 H240 M0 160 H240 M0 180 H240"/>
+        </g>
+        <ellipse cx="30" cy="156" rx="20" ry="3" fill="rgba(0,0,0,.25)"/>
+        <path d="M15 70 L18 150 L42 150 L45 70Z" fill="rgba(220,235,245,.45)" stroke="rgba(255,255,255,.6)"/>
+        <rect x="180" y="50" width="22" height="60" rx="2" fill="rgba(200,225,240,.7)"/>
+        <rect x="185" y="42" width="12" height="10" fill="#2c5f9c"/>
+        <ellipse cx="120" cy="162" rx="98" ry="22" fill="rgba(0,0,0,.35)"/>
+        <ellipse cx="120" cy="155" rx="92" ry="36" fill="url(#plt)" stroke="#0a0a0e"/>
+        <ellipse cx="120" cy="153" rx="84" ry="28" fill="#26262c"/>
+        <path d="M55 145 L50 165 Q120 175 190 160 L185 140 Q120 130 55 145 Z" fill="#f5f1e8" stroke="#d8d2c4" stroke-width=".5"/>
+        <text x="98" y="160" fill="rgba(80,80,80,.35)" font-size="8" font-family="serif" font-style="italic">B·B·G</text>
+        <path d="M65 100 Q80 65 135 70 L180 130 Q130 145 75 140 Z" fill="url(#pita)" stroke="#9a7438"/>
+        <path d="M72 105 Q88 80 130 80 L170 128 Q125 138 82 135 Z" fill="#f3d68f" opacity=".55"/>
+        <ellipse cx="100" cy="115" rx="22" ry="8" fill="#fbfbf5"/>
+        <ellipse cx="92" cy="135" rx="5" ry="2" fill="#fbfbf5"/>
+        <ellipse cx="95" cy="108" rx="11" ry="6" fill="#9c5e2a" transform="rotate(-20 95 108)"/>
+        <ellipse cx="115" cy="100" rx="13" ry="7" fill="#b3713a" transform="rotate(8 115 100)"/>
+        <ellipse cx="125" cy="115" rx="12" ry="6" fill="#a06636" transform="rotate(-8 125 115)"/>
+        <ellipse cx="142" cy="103" rx="11" ry="6" fill="#8c5325" transform="rotate(18 142 103)"/>
+        <ellipse cx="148" cy="118" rx="10" ry="5" fill="#a8693a"/>
+        <circle cx="110" cy="98" r="2" fill="#3a1f0a"/>
+        <circle cx="130" cy="110" r="1.5" fill="#3a1f0a"/>
+        <circle cx="140" cy="100" r="1.8" fill="#3a1f0a"/>
+        <circle cx="105" cy="118" r="3" fill="#c44a36"/>
+        <circle cx="120" cy="123" r="2.5" fill="#d85a44"/>
+        <rect x="85" y="60" width="6" height="42" rx="1" fill="url(#chip)" transform="rotate(-18 88 81)"/>
+        <rect x="98" y="55" width="6" height="48" rx="1" fill="url(#chip)" transform="rotate(-8 101 79)"/>
+        <rect x="112" y="50" width="6" height="50" rx="1" fill="#f4c945"/>
+        <rect x="126" y="52" width="6" height="46" rx="1" fill="url(#chip)" transform="rotate(10 129 75)"/>
+        <rect x="140" y="58" width="6" height="42" rx="1" fill="url(#chip)" transform="rotate(20 143 79)"/>
+        <rect x="152" y="65" width="6" height="38" rx="1" fill="#f4c945" transform="rotate(28 155 84)"/>
+        <rect x="113" y="50" width="1.5" height="48" rx="1" fill="rgba(255,255,255,.4)"/>
+      </svg>
+    </div>
+    Marinated chicken on the spit, tomato, onion, tzatziki and our hand-cut chips — all wrapped in warm pita. <b>£7.50</b>`
+  );
+  await sleep(900);
+  addMsg('me','Looks amazing. One chicken gyro please — I\'m lactose intolerant though 🙏');
+  await typing('them',1200);
+  log('<b>agent</b> allergen filter: <u>lactose-free</u> → tzatziki contains yogurt · suggest <em>hummus swap</em>');
+  addMsg('them','No problem — tzatziki is yogurt-based. I can swap it for <b>hummus</b> or <b>tirokafteri</b> (note: tirokafteri has feta), or skip the sauce. No extra charge. Which one?');
+  await sleep(800);
+  addMsg('me','Hummus please. And add a Greek Salad');
+  log('<b>agent</b> cart.add ×1 Chicken Gyro (mod: hummus, no tzatziki), ×1 Greek Salad');
+
+  /* STEP 3 — Recommendation */
+  setStep(3);
+  addItem('Chicken Gyro · sub. hummus',1,7.50);
+  addItem('Greek Salad',1,7.50);
+  await typing('them',900);
+  addMsg('them','Lovely combo 👌 Anything else, or shall we wrap it up? (Pun intended 😄)');
+  await sleep(800);
+  addMsg('me','That\'s it, thanks');
+
+  /* STEP 4 — Logistics */
+  setStep(4);
+  await typing('them',900);
+  addMsg('them','Lovely! Could you share your name and delivery address? 📍');
+  await sleep(900);
+  addMsg('me','Emma Carter — 47 Camden High Street, London NW1 7JH');
+  log('<b>geocoder</b> Google Maps → lat 51.5366, lng -0.1416 · <em>1.4 mi from kitchen</em>');
+  log('<b>logistics</b> delivery_fee = £1.80 (rate £1/mi, min £1.80, free over £25)');
+  document.getElementById('tCustomer').textContent = 'Emma Carter';
+  document.getElementById('tAddress').textContent = '47 Camden High St · NW1 · 1.4 mi';
+  document.getElementById('tFee').textContent = '£1.80';
+  const sub = 7.50+7.50;
+  const total = sub+1.80;
+  document.getElementById('tTotal').textContent = '£'+total.toFixed(2);
+
+  await typing('them',1000);
+  addMsg('them',`Here's your order summary 🧾<br/>
+    • 1× Chicken Gyro <i>(sub. hummus)</i> — £7.50<br/>
+    • 1× Greek Salad — £7.50<br/>
+    <i>Delivery 1.4 mi — £1.80</i><br/>
+    <b>Total: £${total.toFixed(2)}</b><br/>
+    ETA once paid: ~25 min<br/><br/>
+    To confirm, pay by card 👉 <span style="color:#53bdeb;text-decoration:underline">pay.bigbestgyros.co.uk/7421</span><br/>or send a screenshot of your bank transfer.`);
+
+  /* STEP 5 — Payment OCR */
+  setStep(5);
+  await sleep(900);
+  addMsg('me','<div style="background:#f8f5ee;color:#222;font-family:ui-monospace,Menlo,monospace;font-size:10px;padding:8px;border-radius:6px;width:180px;line-height:1.3;">BANK TRANSFER ✓<br/>──────────────<br/>To: Big Best Gyros<br/>Ref: BBG-7421<br/>Amt: £16.80<br/>Date: 14 May 26 · 19:42<br/>Status: APPROVED<br/>Auth: 9X44-21A</div>');
+  log('<b>OCR</b> Tesseract + GPT-4o vision pipeline started…');
+  await sleep(700);
+  setField('ocrAmt','£16.80');
+  log('<b>OCR</b> field <u>amount</u> → £16.80');
+  await sleep(400);
+  setField('ocrRef','BBG-7421');
+  log('<b>OCR</b> field <u>reference</u> → BBG-7421');
+  await sleep(400);
+  setField('ocrDate','14 May 2026 · 19:42');
+  log('<b>OCR</b> field <u>timestamp</u> → 14 May 2026 19:42');
+  await sleep(400);
+  setField('ocrStatus','✓ matches order','ok');
+  log('<b>verify</b> amount=£16.80 ≟ total=£'+total.toFixed(2)+' · <em>MATCH</em>');
+
+  await typing('them',900);
+  addMsg('them','Payment received ✅ Order <b>#BBG-7421</b> confirmed — we\'re firing up the grill! 🔥');
+
+  /* STEP 6 — POS / Kitchen */
+  setStep(6);
+  await sleep(500);
+  ticketStamp.textContent = 'Printed';
+  ticketStamp.style.color = '#22c55e';
+  ticketStamp.style.borderColor = '#1c3a26';
+  ticketEl.classList.add('printed');
+  setKDS('Sent to kitchen','#22c55e');
+  setStage('st-rec');
+  log('<b>POS</b> ticket <u>#BBG-7421</u> pushed to KDS · <em>printer fired</em>');
+  await sleep(700);
+
+  /* STEP 7 — Status updates */
+  setStep(7);
+  setStage('st-cook');
+  setKDS('Cooking','#f59e0b');
+  await typing('them',900);
+  addMsg('them','🍳 Your gyro is on the grill, salad being plated. ETA ~22 min.');
+  log('<b>status</b> → cooking · ETA 22m · station: <u>grill_2</u>');
+
+  await sleep(1400);
+  setStage('st-pack');
+  setKDS('Packed','#3b82f6');
+  await typing('them',700);
+  addMsg('them','📦 All packed up — handing it to <b>Nikos</b> on the moped now.');
+  log('<b>status</b> → packed · courier=Nikos (rider_07)');
+
+  await sleep(1200);
+  setStage('st-out');
+  setKDS('Out for delivery','#3b82f6');
+  await typing('them',700);
+  addMsg('them','🛵 On the way! Live tracking 👉 <span style="color:#53bdeb;text-decoration:underline">track.bigbestgyros.co.uk/7421</span> · ETA 9 min');
+  log('<b>status</b> → out_for_delivery · route_eta=9m');
+
+  await sleep(1400);
+  setStage('st-done');
+  setKDS('Delivered','#22c55e');
+  await typing('them',700);
+  addMsg('them','🥙 Delivered — kalí órexi! Reply ⭐⭐⭐⭐⭐ if you loved it. Want me to remember "no tzatziki, sub hummus" for next time?');
+  log('<b>status</b> → delivered · <em>memory.write</em> profile.allergens=[lactose] · prefs.sauce=hummus');
+
+  // KPI tick
+  const kpiO = document.getElementById('kpiOrders');
+  const kpiC = document.getElementById('kpiCalls');
+  kpiO.textContent = parseInt(kpiO.textContent,10)+1;
+  kpiC.textContent = parseInt(kpiC.textContent,10)+1;
+  setStep(8); // mark all done
+
+  running = false;
+}
+
+function setField(id, val, cls){
+  const el = document.getElementById(id);
+  el.classList.remove('pending');
+  if (cls) el.classList.add(cls);
+  else el.classList.add('ok');
+  el.querySelector('span:last-child').textContent = val;
+}
+
+document.getElementById('startBtn').addEventListener('click', runDemo);
+document.getElementById('resetBtn').addEventListener('click', reset);
+// tap the phone to (re)start, useful on mobile
+document.querySelector('.phone').addEventListener('click', () => {
+  if (!running && !items.length && !chatEl.children.length) runDemo();
+});
+
+// Robust auto-start: fire on DOMContentLoaded (doesn't wait for fonts/CSS),
+// fall back to load event, and a final safety net via setTimeout.
+let __started = false;
+function __kickoff(){
+  if (__started) return;
+  __started = true;
+  runDemo().catch(err => {
+    addMsg('them','⚠️ Demo error: '+err.message);
+    console.error(err);
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(__kickoff, 200));
+} else {
+  setTimeout(__kickoff, 200);
+}
+window.addEventListener('load', () => setTimeout(__kickoff, 200));
+setTimeout(__kickoff, 1500); // hard fallback
+</script>
+</body>
+</html>
