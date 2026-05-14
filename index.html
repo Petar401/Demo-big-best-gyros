@@ -467,13 +467,14 @@
           ─────────────<br/>
           To: Big Best Gyros<br/>
           Ref: BBG-7421<br/>
-          Amt: €23.40<br/>
+          Amt: £16.80<br/>
           Date: 14 May 26<br/>
           Time: 19:42<br/>
           Status: APPROVED<br/>
           Auth: 9X44-21A<br/>
           ─────────────<br/>
-          IBAN ****8821
+          Sort 04-29-09<br/>
+          Acct ****8821
         </div>
         <div class="ocr-fields">
           <div class="f pending" id="ocrAmt"><span>Amount detected</span><span>—</span></div>
@@ -498,9 +499,9 @@
         <hr/>
         <div id="tItems"><div class="row" style="color:#6b7382">(items will appear here)</div></div>
         <hr/>
-        <div class="row"><span>Subtotal</span><span id="tSub">€0.00</span></div>
-        <div class="row"><span>Delivery</span><span id="tFee">€0.00</span></div>
-        <div class="row"><span><b>Total</b></span><span><b id="tTotal">€0.00</b></span></div>
+        <div class="row"><span>Subtotal</span><span id="tSub">£0.00</span></div>
+        <div class="row"><span>Delivery</span><span id="tFee">£0.00</span></div>
+        <div class="row"><span><b>Total</b></span><span><b id="tTotal">£0.00</b></span></div>
       </div>
       <div class="stages">
         <div class="stage" id="st-rec">Received</div>
@@ -603,11 +604,11 @@ function renderTicket(){
     tItems.innerHTML = '<div class="row" style="color:#6b7382">(items will appear here)</div>';
   } else {
     tItems.innerHTML = items.map(i =>
-      `<div class="row"><span>${i.qty}× ${i.name}</span><span>€${(i.qty*i.price).toFixed(2)}</span></div>`
+      `<div class="row"><span>${i.qty}× ${i.name}</span><span>£${(i.qty*i.price).toFixed(2)}</span></div>`
     ).join('');
   }
   const sub = items.reduce((s,i)=>s+i.qty*i.price,0);
-  document.getElementById('tSub').textContent = '€'+sub.toFixed(2);
+  document.getElementById('tSub').textContent = '£'+sub.toFixed(2);
 }
 
 function setStage(id){
@@ -632,8 +633,8 @@ function reset(){
   renderTicket();
   document.getElementById('tCustomer').textContent = '—';
   document.getElementById('tAddress').textContent = '—';
-  document.getElementById('tFee').textContent = '€0.00';
-  document.getElementById('tTotal').textContent = '€0.00';
+  document.getElementById('tFee').textContent = '£0.00';
+  document.getElementById('tTotal').textContent = '£0.00';
   ticketStamp.textContent = 'Pending';
   ticketStamp.style.color = '#f59e0b';
   ticketStamp.style.borderColor = '#5b4413';
@@ -655,80 +656,143 @@ async function runDemo(){
 
   /* STEP 1 — Trigger */
   setStep(1);
-  log('<b>n8n</b> webhook fired — WhatsApp Cloud API inbound from <u>+34 612 845 921</u>');
+  log('<b>n8n</b> webhook fired — WhatsApp Cloud API inbound from <u>+44 7700 900812</u>');
   await sleep(500);
-  addMsg('me','Hi! Do you deliver tonight?');
+  addMsg('me','Hey, do you deliver tonight?');
   await sleep(700);
-  log('<b>agent</b> intent: <em>greeting + delivery_inquiry</em>');
+  log('<b>agent</b> intent: <em>greeting + delivery_inquiry</em> · session=ws_7421');
 
   /* STEP 2 — Greeting & menu */
   setStep(2);
   await typing('them',1200);
-  addMsg('them','Hey there 👋 Welcome to <b>Big Best Gyros</b>! Yes, we deliver to your area until 23:30. Here\'s tonight\'s menu:');
+  addMsg('them','Yiá sas 👋 Welcome to <b>Big Best Gyros</b>! Yes, we deliver until 23:30 across NW/N London. Here\'s a peek at the menu:');
   addMsg('them',
     `<div class="menu-card">
-       <div class="item"><span>🥙 Classic Chicken Gyros</span><b>€8.90</b></div>
-       <div class="item"><span>🌶️ Spicy Lamb Gyros</span><b>€9.90</b></div>
-       <div class="item"><span>🥗 Halloumi Wrap (veggie)</span><b>€7.90</b></div>
-       <div class="item"><span>🍟 Greek Fries w/ feta</span><b>€4.50</b></div>
-       <div class="item"><span>🥤 Homemade lemonade</span><b>€2.80</b></div>
+       <div class="item"><span>🥙 Chicken Gyro (pita)</span><b>£7.50</b></div>
+       <div class="item"><span>🌶️ Pork Gyro (pita)</span><b>£7.50</b></div>
+       <div class="item"><span>🧀 Halloumi Pita (veggie)</span><b>£7.50</b></div>
+       <div class="item"><span>🥗 Greek Salad</span><b>£7.50</b></div>
+       <div class="item"><span>🍟 Chips with Feta Cheese</span><b>£4.50</b></div>
      </div>`
   );
-  addMsg('them','Anything you fancy? I can also tell you about ingredients or allergens 🌾🥛🥜');
-  log('<b>agent</b> retrieved menu from <u>menu.products</u> (Supabase) · <em>5 items</em>');
+  addMsg('them','Pita wraps come with tomato, onion, tzatziki & our hand-cut chips inside 🥙 Want the full menu (gyros, souvlaki, box meals, specials)? Just ask. Allergens covered too 🌾🥛🥜');
+  log('<b>agent</b> retrieved menu from <u>menu.products</u> (Supabase) · <em>33 items</em> · top-5 highlighted');
 
   await sleep(900);
-  addMsg('me','I want a chicken gyros but I\'m lactose intolerant 🙏');
-  await typing('them',1300);
-  log('<b>agent</b> allergen filter: <u>lactose-free</u> → suggest <em>tzatziki swap</em>');
-  addMsg('them','Got it! Our Classic Chicken Gyros has tzatziki (yogurt). I can swap it for our lactose-free hummus or tahini sauce — same price. Which one?');
+  addMsg('me','What\'s the chicken gyro like? Never tried one here before');
+  await typing('them',1100);
+  log('<b>agent</b> intent: <em>product_inquiry(chicken_gyro)</em> · attaching product photo');
+  addMsg('them','Here\'s our Chicken Gyro 😋');
+  addMsg('them',
+    `<div style="margin:2px 0 4px 0;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08);width:220px;">
+      <svg viewBox="0 0 240 200" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;">
+        <defs>
+          <linearGradient id="tbl" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#bba990"/>
+            <stop offset="100%" stop-color="#8c7a60"/>
+          </linearGradient>
+          <radialGradient id="plt" cx="0.5" cy="0.4">
+            <stop offset="0%" stop-color="#3c3c42"/>
+            <stop offset="100%" stop-color="#181820"/>
+          </radialGradient>
+          <linearGradient id="pita" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f3d69a"/>
+            <stop offset="100%" stop-color="#c89c50"/>
+          </linearGradient>
+          <linearGradient id="chip" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#d9a223"/>
+            <stop offset="50%" stop-color="#f6cf52"/>
+            <stop offset="100%" stop-color="#c89018"/>
+          </linearGradient>
+        </defs>
+        <rect width="240" height="200" fill="url(#tbl)"/>
+        <g opacity=".18" stroke="#000" stroke-width=".5">
+          <path d="M0 20 H240 M0 40 H240 M0 60 H240 M0 80 H240 M0 100 H240 M0 120 H240 M0 140 H240 M0 160 H240 M0 180 H240"/>
+        </g>
+        <ellipse cx="30" cy="156" rx="20" ry="3" fill="rgba(0,0,0,.25)"/>
+        <path d="M15 70 L18 150 L42 150 L45 70Z" fill="rgba(220,235,245,.45)" stroke="rgba(255,255,255,.6)"/>
+        <rect x="180" y="50" width="22" height="60" rx="2" fill="rgba(200,225,240,.7)"/>
+        <rect x="185" y="42" width="12" height="10" fill="#2c5f9c"/>
+        <ellipse cx="120" cy="162" rx="98" ry="22" fill="rgba(0,0,0,.35)"/>
+        <ellipse cx="120" cy="155" rx="92" ry="36" fill="url(#plt)" stroke="#0a0a0e"/>
+        <ellipse cx="120" cy="153" rx="84" ry="28" fill="#26262c"/>
+        <path d="M55 145 L50 165 Q120 175 190 160 L185 140 Q120 130 55 145 Z" fill="#f5f1e8" stroke="#d8d2c4" stroke-width=".5"/>
+        <text x="98" y="160" fill="rgba(80,80,80,.35)" font-size="8" font-family="serif" font-style="italic">B·B·G</text>
+        <path d="M65 100 Q80 65 135 70 L180 130 Q130 145 75 140 Z" fill="url(#pita)" stroke="#9a7438"/>
+        <path d="M72 105 Q88 80 130 80 L170 128 Q125 138 82 135 Z" fill="#f3d68f" opacity=".55"/>
+        <ellipse cx="100" cy="115" rx="22" ry="8" fill="#fbfbf5"/>
+        <ellipse cx="92" cy="135" rx="5" ry="2" fill="#fbfbf5"/>
+        <ellipse cx="95" cy="108" rx="11" ry="6" fill="#9c5e2a" transform="rotate(-20 95 108)"/>
+        <ellipse cx="115" cy="100" rx="13" ry="7" fill="#b3713a" transform="rotate(8 115 100)"/>
+        <ellipse cx="125" cy="115" rx="12" ry="6" fill="#a06636" transform="rotate(-8 125 115)"/>
+        <ellipse cx="142" cy="103" rx="11" ry="6" fill="#8c5325" transform="rotate(18 142 103)"/>
+        <ellipse cx="148" cy="118" rx="10" ry="5" fill="#a8693a"/>
+        <circle cx="110" cy="98" r="2" fill="#3a1f0a"/>
+        <circle cx="130" cy="110" r="1.5" fill="#3a1f0a"/>
+        <circle cx="140" cy="100" r="1.8" fill="#3a1f0a"/>
+        <circle cx="105" cy="118" r="3" fill="#c44a36"/>
+        <circle cx="120" cy="123" r="2.5" fill="#d85a44"/>
+        <rect x="85" y="60" width="6" height="42" rx="1" fill="url(#chip)" transform="rotate(-18 88 81)"/>
+        <rect x="98" y="55" width="6" height="48" rx="1" fill="url(#chip)" transform="rotate(-8 101 79)"/>
+        <rect x="112" y="50" width="6" height="50" rx="1" fill="#f4c945"/>
+        <rect x="126" y="52" width="6" height="46" rx="1" fill="url(#chip)" transform="rotate(10 129 75)"/>
+        <rect x="140" y="58" width="6" height="42" rx="1" fill="url(#chip)" transform="rotate(20 143 79)"/>
+        <rect x="152" y="65" width="6" height="38" rx="1" fill="#f4c945" transform="rotate(28 155 84)"/>
+        <rect x="113" y="50" width="1.5" height="48" rx="1" fill="rgba(255,255,255,.4)"/>
+      </svg>
+    </div>
+    Marinated chicken on the spit, tomato, onion, tzatziki and our hand-cut chips — all wrapped in warm pita. <b>£7.50</b>`
+  );
   await sleep(900);
-  addMsg('me','Tahini please. And add fries.');
-  log('<b>agent</b> cart.add ×1 Chicken Gyros (mod: tahini), ×1 Greek Fries');
+  addMsg('me','Looks amazing. One chicken gyro please — I\'m lactose intolerant though 🙏');
+  await typing('them',1200);
+  log('<b>agent</b> allergen filter: <u>lactose-free</u> → tzatziki contains yogurt · suggest <em>hummus swap</em>');
+  addMsg('them','No problem — tzatziki is yogurt-based. I can swap it for <b>hummus</b> or <b>tirokafteri</b> (note: tirokafteri has feta), or skip the sauce. No extra charge. Which one?');
+  await sleep(800);
+  addMsg('me','Hummus please. And add a Greek Salad');
+  log('<b>agent</b> cart.add ×1 Chicken Gyro (mod: hummus, no tzatziki), ×1 Greek Salad');
 
   /* STEP 3 — Recommendation */
   setStep(3);
-  addItem('Chicken Gyros (tahini)',1,8.90);
-  addItem('Greek Fries w/ feta',1,4.50);
-  await typing('them',1100);
-  addMsg('them','Perfect choice 👌 Want a homemade lemonade for €2.80? It pairs really well with the fries.');
+  addItem('Chicken Gyro · sub. hummus',1,7.50);
+  addItem('Greek Salad',1,7.50);
+  await typing('them',900);
+  addMsg('them','Lovely combo 👌 Anything else, or shall we wrap it up? (Pun intended 😄)');
   await sleep(800);
-  addMsg('me','Sure, one lemonade.');
-  addItem('Homemade lemonade',1,2.80);
-  log('<b>agent</b> upsell accepted → +€2.80 · <em>upsell_rate=+1</em>');
+  addMsg('me','That\'s it, thanks');
 
   /* STEP 4 — Logistics */
   setStep(4);
   await typing('them',900);
-  addMsg('them','Awesome! Could you share your name and delivery address? 📍');
+  addMsg('them','Lovely! Could you share your name and delivery address? 📍');
   await sleep(900);
-  addMsg('me','Marta López — Carrer de Mallorca 220, 4-2, Barcelona');
-  log('<b>geocoder</b> Google Maps → lat 41.3954, lng 2.1612 · <em>1.8 km from kitchen</em>');
-  log('<b>logistics</b> delivery_fee = €1.80 (rate €1/km, min €1.80)');
-  document.getElementById('tCustomer').textContent = 'Marta López';
-  document.getElementById('tAddress').textContent = 'C/ Mallorca 220, 4-2 · 1.8 km';
-  document.getElementById('tFee').textContent = '€1.80';
-  const sub = 8.90+4.50+2.80;
+  addMsg('me','Emma Carter — 47 Camden High Street, London NW1 7JH');
+  log('<b>geocoder</b> Google Maps → lat 51.5366, lng -0.1416 · <em>1.4 mi from kitchen</em>');
+  log('<b>logistics</b> delivery_fee = £1.80 (rate £1/mi, min £1.80, free over £25)');
+  document.getElementById('tCustomer').textContent = 'Emma Carter';
+  document.getElementById('tAddress').textContent = '47 Camden High St · NW1 · 1.4 mi';
+  document.getElementById('tFee').textContent = '£1.80';
+  const sub = 7.50+7.50;
   const total = sub+1.80;
-  document.getElementById('tTotal').textContent = '€'+total.toFixed(2);
+  document.getElementById('tTotal').textContent = '£'+total.toFixed(2);
 
   await typing('them',1000);
-  addMsg('them',`Got it! Here's your order summary:<br/>
-    • 1× Chicken Gyros (tahini) — €8.90<br/>
-    • 1× Greek Fries w/ feta — €4.50<br/>
-    • 1× Homemade lemonade — €2.80<br/>
-    <i>Delivery 1.8 km — €1.80</i><br/>
-    <b>Total: €${total.toFixed(2)}</b><br/><br/>
-    To confirm, please send a screenshot of your bank transfer or pay via card link 👉 <span style="color:#53bdeb;text-decoration:underline">pay.bbg.eu/7421</span>`);
+  addMsg('them',`Here's your order summary 🧾<br/>
+    • 1× Chicken Gyro <i>(sub. hummus)</i> — £7.50<br/>
+    • 1× Greek Salad — £7.50<br/>
+    <i>Delivery 1.4 mi — £1.80</i><br/>
+    <b>Total: £${total.toFixed(2)}</b><br/>
+    ETA once paid: ~25 min<br/><br/>
+    To confirm, pay by card 👉 <span style="color:#53bdeb;text-decoration:underline">pay.bigbestgyros.co.uk/7421</span><br/>or send a screenshot of your bank transfer.`);
 
   /* STEP 5 — Payment OCR */
   setStep(5);
   await sleep(900);
-  addMsg('me','<div style="background:#f8f5ee;color:#222;font-family:ui-monospace,Menlo,monospace;font-size:10px;padding:8px;border-radius:6px;width:170px;line-height:1.3;">BANK TRANSFER<br/>──────────<br/>To: Big Best Gyros<br/>Ref: BBG-7421<br/>Amt: €23.40<br/>Date: 14 May 26 19:42<br/>Status: APPROVED</div>');
-  log('<b>OCR</b> Tesseract pipeline started…');
+  addMsg('me','<div style="background:#f8f5ee;color:#222;font-family:ui-monospace,Menlo,monospace;font-size:10px;padding:8px;border-radius:6px;width:180px;line-height:1.3;">BANK TRANSFER ✓<br/>──────────────<br/>To: Big Best Gyros<br/>Ref: BBG-7421<br/>Amt: £16.80<br/>Date: 14 May 26 · 19:42<br/>Status: APPROVED<br/>Auth: 9X44-21A</div>');
+  log('<b>OCR</b> Tesseract + GPT-4o vision pipeline started…');
   await sleep(700);
-  setField('ocrAmt','€23.40');
-  log('<b>OCR</b> field <u>amount</u> → €23.40');
+  setField('ocrAmt','£16.80');
+  log('<b>OCR</b> field <u>amount</u> → £16.80');
   await sleep(400);
   setField('ocrRef','BBG-7421');
   log('<b>OCR</b> field <u>reference</u> → BBG-7421');
@@ -737,10 +801,10 @@ async function runDemo(){
   log('<b>OCR</b> field <u>timestamp</u> → 14 May 2026 19:42');
   await sleep(400);
   setField('ocrStatus','✓ matches order','ok');
-  log('<b>verify</b> amount=€23.40 ≟ total=€'+total.toFixed(2)+' · <em>MATCH</em>');
+  log('<b>verify</b> amount=£16.80 ≟ total=£'+total.toFixed(2)+' · <em>MATCH</em>');
 
   await typing('them',900);
-  addMsg('them','Payment received ✅ Your order is confirmed! 🎉');
+  addMsg('them','Payment received ✅ Order <b>#BBG-7421</b> confirmed — we\'re firing up the grill! 🔥');
 
   /* STEP 6 — POS / Kitchen */
   setStep(6);
@@ -759,29 +823,29 @@ async function runDemo(){
   setStage('st-cook');
   setKDS('Cooking','#f59e0b');
   await typing('them',900);
-  addMsg('them','🍳 Your gyros is on the grill! ETA ~22 min.');
-  log('<b>status</b> → cooking · ETA 22m');
+  addMsg('them','🍳 Your gyro is on the grill, salad being plated. ETA ~22 min.');
+  log('<b>status</b> → cooking · ETA 22m · station: <u>grill_2</u>');
 
   await sleep(1400);
   setStage('st-pack');
   setKDS('Packed','#3b82f6');
   await typing('them',700);
-  addMsg('them','📦 Packed and ready, driver picking it up now.');
-  log('<b>status</b> → packed');
+  addMsg('them','📦 All packed up — handing it to <b>Nikos</b> on the moped now.');
+  log('<b>status</b> → packed · courier=Nikos (rider_07)');
 
   await sleep(1200);
   setStage('st-out');
   setKDS('Out for delivery','#3b82f6');
   await typing('them',700);
-  addMsg('them','🛵 Out for delivery! Track here: <span style="color:#53bdeb;text-decoration:underline">bbg.eu/track/7421</span>');
-  log('<b>status</b> → out_for_delivery');
+  addMsg('them','🛵 On the way! Live tracking 👉 <span style="color:#53bdeb;text-decoration:underline">track.bigbestgyros.co.uk/7421</span> · ETA 9 min');
+  log('<b>status</b> → out_for_delivery · route_eta=9m');
 
   await sleep(1400);
   setStage('st-done');
   setKDS('Delivered','#22c55e');
   await typing('them',700);
-  addMsg('them','🥙 Delivered — enjoy! Reply with ⭐⭐⭐⭐⭐ if you loved it. Want me to remember this order for next time?');
-  log('<b>status</b> → delivered · <em>memory.write order_history[+1]</em>');
+  addMsg('them','🥙 Delivered — kalí órexi! Reply ⭐⭐⭐⭐⭐ if you loved it. Want me to remember "no tzatziki, sub hummus" for next time?');
+  log('<b>status</b> → delivered · <em>memory.write</em> profile.allergens=[lactose] · prefs.sauce=hummus');
 
   // KPI tick
   const kpiO = document.getElementById('kpiOrders');
