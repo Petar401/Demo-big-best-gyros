@@ -349,9 +349,23 @@
     .right{display:none}
   }
   @media (max-width:760px){
-    .app{grid-template-columns:1fr}
+    body{overflow:auto}
+    .app{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
     .left{display:none}
     .right{display:none}
+    header.bar{padding:8px 12px;height:auto;flex-wrap:wrap;gap:8px}
+    .brand h1{font-size:13px}
+    .brand small{font-size:10px}
+    button.cta{padding:8px 12px;font-size:12px}
+    .phone-wrap{padding:8px 0}
+    .phone{
+      width:100vw;max-width:100vw;height:calc(100vh - 120px);max-height:none;
+      border-radius:0;border-width:0;border-top:1px solid #1d242c;
+      box-shadow:none;
+    }
+    .notch{display:none}
+    .wa-header{padding-top:14px}
+    .footer{font-size:10px;flex-wrap:wrap;gap:6px}
   }
 </style>
 </head>
@@ -867,11 +881,29 @@ function setField(id, val, cls){
 
 document.getElementById('startBtn').addEventListener('click', runDemo);
 document.getElementById('resetBtn').addEventListener('click', reset);
-
-// auto-start a beat after load so the demo is "alive" immediately
-window.addEventListener('load', () => {
-  setTimeout(runDemo, 600);
+// tap the phone to (re)start, useful on mobile
+document.querySelector('.phone').addEventListener('click', () => {
+  if (!running && !items.length && !chatEl.children.length) runDemo();
 });
+
+// Robust auto-start: fire on DOMContentLoaded (doesn't wait for fonts/CSS),
+// fall back to load event, and a final safety net via setTimeout.
+let __started = false;
+function __kickoff(){
+  if (__started) return;
+  __started = true;
+  runDemo().catch(err => {
+    addMsg('them','⚠️ Demo error: '+err.message);
+    console.error(err);
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(__kickoff, 200));
+} else {
+  setTimeout(__kickoff, 200);
+}
+window.addEventListener('load', () => setTimeout(__kickoff, 200));
+setTimeout(__kickoff, 1500); // hard fallback
 </script>
 </body>
 </html>
