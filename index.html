@@ -629,7 +629,9 @@ function setStage(id){
   ['st-rec','st-cook','st-pack','st-out','st-done'].forEach(s => {
     document.getElementById(s).classList.remove('on');
   });
-  document.getElementById(id).classList.add('on');
+  if (!id) return;
+  const el = document.getElementById(id);
+  if (el) el.classList.add('on');
 }
 
 function setKDS(text, color){
